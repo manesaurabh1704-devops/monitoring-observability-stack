@@ -1,7 +1,7 @@
 # 📊 Monitoring & Observability Stack
 
 > Production-grade monitoring stack for StudentSphere on AWS EKS.
-> Prometheus + Grafana + Alertmanager — deployed via Helm.
+> Prometheus + Grafana + Alertmanager — deployed via Helm in single command.
 > Part of the [multi-cloud-devops-studentsphere](https://github.com/manesaurabh1704-devops/multi-cloud-devops-studentsphere) project.
 
 ---
@@ -18,6 +18,22 @@ monitoring-observability-stack/
 │   └── alertmanager.yaml    # Alert routing configuration
 ├── screenshots/             # Proof of deployment
 └── README.md
+```
+
+---
+
+## 🎯 Why Monitoring?
+
+```
+Without Monitoring:
+  App is slow → no idea why
+  Pod crashed → found out from users
+  Memory leak → no warning until crash
+
+With Monitoring:
+  Prometheus: collects metrics every 15s from 31 targets
+  Grafana:    real-time dashboards — CPU, Memory, Pod health
+  Alertmanager: routes alerts before users notice issues
 ```
 
 ---
@@ -46,12 +62,12 @@ Kubernetes Cluster (AWS EKS)
     └── monitoring pods ──────────────────────►│
                                                │
                                          Prometheus
-                                         (collect + store)
+                                      (collect every 15s)
                                                │
                                     ┌──────────┴──────────┐
                                     │                     │
                                  Grafana            Alertmanager
-                              (dashboards)           (alerts)
+                              (dashboards)           (alert routing)
 ```
 
 ---
@@ -77,6 +93,12 @@ aws eks update-kubeconfig --region ap-south-1 --name studentsphere-cluster
 helm repo add prometheus-community \
   https://prometheus-community.github.io/helm-charts
 helm repo update
+```
+
+Expected output:
+```
+"prometheus-community" has been added to your repositories
+Update Complete. Happy Helming!
 ```
 
 ### Step 2 — Install Stack
@@ -152,6 +174,7 @@ Alertmanager: http://<ALERTMANAGER-URL>:9093
 | studentsphere CPU | 0.565% | App namespace CPU |
 | studentsphere Memory | 74.1% | App namespace memory |
 | Prometheus Targets | 31 UP | All scrape targets active |
+| Alertmanager Alerts | 7 | Active alerts |
 
 ---
 
@@ -217,6 +240,15 @@ Error: Connection refused
 Fix: Check LoadBalancer status
 kubectl get svc prometheus-grafana -n monitoring
 # Wait for EXTERNAL-IP to be assigned
+```
+
+### Problem 5 — Prometheus Target Shows DOWN
+```
+Error: Target health = DOWN in Prometheus UI
+
+Fix: Check target service is running
+kubectl get svc -n studentsphere
+kubectl get pods -n studentsphere
 ```
 
 ---
